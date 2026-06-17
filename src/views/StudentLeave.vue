@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { SwitchButton } from '@element-plus/icons-vue'
+import { SwitchButton, View } from '@element-plus/icons-vue'
 import {
   getInitialApplications,
   addApplication,
+  STORAGE_KEY,
   type LeaveApplication,
   type LeaveType,
   type LeaveStatus
@@ -21,6 +22,8 @@ const currentUser = computed(() => {
 })
 
 const myApplications = ref<LeaveApplication[]>([])
+const detailVisible = ref(false)
+const currentApplication = ref<LeaveApplication | null>(null)
 
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
@@ -70,12 +73,23 @@ const loadMyApplications = () => {
     .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))
 }
 
+const handleStorageChange = (e: StorageEvent) => {
+  if (e.key === STORAGE_KEY) {
+    loadMyApplications()
+  }
+}
+
 onMounted(() => {
   if (!currentUser.value || currentUser.value.role !== 'student') {
     router.replace('/login')
     return
   }
   loadMyApplications()
+  window.addEventListener('storage', handleStorageChange)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('storage', handleStorageChange)
 })
 
 const handleSubmit = async () => {
@@ -122,6 +136,11 @@ const handleReset = () => {
     reason: ''
   }
   formRef.value?.resetFields()
+}
+
+const handleViewDetail = (row: LeaveApplication) => {
+  currentApplication.value = row
+  detailVisible.value = true
 }
 
 const handleLogout = () => {
@@ -236,12 +255,67 @@ const handleLogout = () => {
                 </el-tag>
               </template>
             </el-table-column>
+            <el-table-column label="驳回原因" min-width="160" show-overflow-tooltip>
+              <template #default="{ row }">
+                <span v-if="row.status === 'rejected' && row.rejectReason" style="color: #f56c6c">
+                  {{ row.rejectReason }}
+                </span>
+                <span v-else style="color: #c0c4cc">-</span>
+              </template>
+            </el-table-column>
             <el-table-column prop="submittedAt" label="提交时间" width="160" />
+            <el-table-column label="审批时间" width="160">
+              <template #default="{ row }">
+                <span v-if="row.approvedAt">{{ row.approvedAt }}</span>
+                <span v-else style="color: #c0c4cc">-</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="80" fixed="right" align="center">
+              <template #default="{ row }">
+                <el-button link type="primary" :icon="View" @click="handleViewDetail(row)">
+                  详情
+                </el-button>
+              </template>
+            </el-table-column>
           </el-table>
           <el-empty v-if="myApplications.length === 0" description="暂无请假记录" />
         </el-card>
       </el-main>
     </el-container>
+
+    <el-dialog v-model="detailVisible" title="请假详情" width="520px" destroy-on-close>
+      <template v-if="currentApplication">
+        <el-descriptions :column="2" border>
+          <el-descriptions-item label="申请编号">{{ currentApplication.id }}</el-descriptions-item>
+          <el-descriptions-item label="学生姓名">{{ currentApplication.studentName }}</el-descriptions-item>
+          <el-descriptions-item label="班级">{{ currentApplication.className }}</el-descriptions-item>
+          <el-descriptions-item label="课程">{{ currentApplication.courseName }}</el-descriptions-item>
+          <el-descriptions-item label="请假类型">{{ currentApplication.leaveType }}</el-descriptions-item>
+          <el-descriptions-item label="当前状态">
+            <el-tag :type="statusTagType(currentApplication.status)" size="small">
+              {{ statusLabel(currentApplication.status) }}
+            </el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="开始日期">{{ currentApplication.startDate }}</el-descriptions-item>
+          <el-descriptions-item label="结束日期">{{ currentApplication.endDate }}</el-descriptions-item>
+          <el-descriptions-item label="请假原因" :span="2">{{ currentApplication.reason }}</el-descriptions-item>
+          <el-descriptions-item label="提交时间">{{ currentApplication.submittedAt }}</el-descriptions-item>
+          <el-descriptions-item v-if="currentApplication.approvedAt" label="审批时间">
+            {{ currentApplication.approvedAt }}
+          </el-descriptions-item>
+          <el-descriptions-item
+            v-if="currentApplication.status === 'rejected' && currentApplication.rejectReason"
+            label="驳回原因"
+            :span="2"
+          >
+            <span style="color: #f56c6c">{{ currentApplication.rejectReason }}</span>
+          </el-descriptions-item>
+        </el-descriptions>
+      </template>
+      <template #footer>
+        <el-button @click="detailVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
