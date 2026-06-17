@@ -6,6 +6,7 @@ export interface MockUser {
   name: string
   role: UserRole
   roleLabel: string
+  className?: string
 }
 
 export const mockUsers: MockUser[] = [
@@ -28,6 +29,7 @@ export const mockUsers: MockUser[] = [
     password: 'student123',
     name: '张同学',
     role: 'student',
-    roleLabel: '学生'
+    roleLabel: '学生',
+    className: '高三(1)班'
   }
 ]

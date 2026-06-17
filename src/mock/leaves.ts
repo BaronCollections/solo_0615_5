@@ -153,3 +153,21 @@ export function getInitialApplications(): LeaveApplication[] {
 export function saveApplications(applications: LeaveApplication[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(applications))
 }
+
+export function addApplication(app: Omit<LeaveApplication, 'id' | 'status' | 'rejectReason' | 'approvedAt'>): LeaveApplication {
+  const applications = getInitialApplications()
+  const maxNum = applications.reduce((max, a) => {
+    const num = parseInt(a.id.replace('L', ''), 10)
+    return num > max ? num : max
+  }, 0)
+  const newApp: LeaveApplication = {
+    ...app,
+    id: `L${String(maxNum + 1).padStart(3, '0')}`,
+    status: 'pending',
+    rejectReason: '',
+    approvedAt: ''
+  }
+  applications.push(newApp)
+  saveApplications(applications)
+  return newApp
+}

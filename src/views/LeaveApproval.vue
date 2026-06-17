@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { Search, Refresh, View, Check, Close, SwitchButton } from '@element-plus/icons-vue'
 import {
   getInitialApplications,
   saveApplications,
+  STORAGE_KEY,
   type LeaveApplication,
   type LeaveStatus
 } from '../mock/leaves'
@@ -15,7 +16,6 @@ const router = useRouter()
 
 const applications = ref<LeaveApplication[]>([])
 const activeTab = ref<LeaveStatus | 'all'>('all')
-const filterFormRef = ref<FormInstance>()
 const detailVisible = ref(false)
 const rejectDialogVisible = ref(false)
 const currentApplication = ref<LeaveApplication | null>(null)
@@ -82,7 +82,18 @@ onMounted(() => {
     return
   }
   applications.value = getInitialApplications()
+  window.addEventListener('storage', handleStorageChange)
 })
+
+onUnmounted(() => {
+  window.removeEventListener('storage', handleStorageChange)
+})
+
+const handleStorageChange = (e: StorageEvent) => {
+  if (e.key === STORAGE_KEY) {
+    applications.value = getInitialApplications()
+  }
+}
 
 const statusTagType = (status: LeaveStatus) => {
   const map: Record<LeaveStatus, '' | 'success' | 'danger' | 'warning'> = {

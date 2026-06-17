@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
 import { validateLogin } from '../utils/auth'
-import { mockUsers, type MockUser } from '../mock/accounts'
+import { mockUsers } from '../mock/accounts'
 
 const router = useRouter()
 
@@ -59,8 +59,10 @@ const handleLogin = async () => {
 
         if (result.user.role === 'teacher') {
           router.replace('/leave-approval')
+        } else if (result.user.role === 'student') {
+          router.replace('/student-leave')
         } else {
-          ElMessage.info('当前仅支持教师端请假审批功能')
+          ElMessage.info('当前角色暂无可用功能')
         }
       } else {
         ElMessage.error(result.message)

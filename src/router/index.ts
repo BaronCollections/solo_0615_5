@@ -16,6 +16,11 @@ const router = createRouter({
       path: '/leave-approval',
       name: 'LeaveApproval',
       component: () => import('../views/LeaveApproval.vue')
+    },
+    {
+      path: '/student-leave',
+      name: 'StudentLeave',
+      component: () => import('../views/StudentLeave.vue')
     }
   ]
 })
