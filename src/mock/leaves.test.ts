@@ -316,4 +316,31 @@ describe('leaves mock - 撤回功能', () => {
     expect(pending.find((a) => a.id === app2.id)).toBeDefined()
     expect(pending.length).toBe(1)
   })
+
+  it('回归：学生新增待审批申请后撤回，教师端重新挂载后待审批列表不含该申请', () => {
+    localStorage.setItem(LEAVE_RECORDS_KEY, '[]')
+
+    const newApp = addApplication({
+      studentName: '回归测试学生',
+      className: '高三(2)班',
+      courseName: '英语',
+      leaveType: '事假',
+      startDate: '2026-06-29',
+      endDate: '2026-06-29',
+      reason: '回归测试撤回后教师端不可见',
+      submittedAt: '2026-06-18 08:00'
+    })
+    expect(newApp.status).toBe('pending')
+
+    const withdrawResult = withdrawApplication(newApp.id)
+    expect(withdrawResult).toBe(true)
+
+    const fromStorage = JSON.parse(localStorage.getItem(LEAVE_RECORDS_KEY)!)
+    const stored = fromStorage.find((a: LeaveApplication) => a.id === newApp.id)
+    expect(stored.status).toBe('withdrawn')
+
+    const all = getInitialApplications()
+    const pending = all.filter((a) => a.status === 'pending')
+    expect(pending.find((a) => a.id === newApp.id)).toBeUndefined()
+  })
 })
