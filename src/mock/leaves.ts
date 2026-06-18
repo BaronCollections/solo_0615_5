@@ -171,3 +171,32 @@ export function withdrawApplication(id: string): boolean {
   saveApplications(applications)
   return true
 }
+
+export function resubmitApplication(id: string): LeaveApplication | null {
+  const applications = getInitialApplications()
+  const target = applications.find((a) => a.id === id)
+  if (!target || target.status !== 'rejected') {
+    return null
+  }
+  const maxNum = applications.reduce((max, a) => {
+    const num = parseInt(a.id.replace('L', ''), 10)
+    return num > max ? num : max
+  }, 0)
+  const newApp: LeaveApplication = {
+    id: `L${String(maxNum + 1).padStart(3, '0')}`,
+    studentName: target.studentName,
+    className: target.className,
+    courseName: target.courseName,
+    leaveType: target.leaveType,
+    startDate: target.startDate,
+    endDate: target.endDate,
+    reason: target.reason,
+    status: 'pending',
+    rejectReason: '',
+    submittedAt: new Date().toLocaleString('zh-CN'),
+    approvedAt: ''
+  }
+  applications.push(newApp)
+  saveApplications(applications)
+  return newApp
+}

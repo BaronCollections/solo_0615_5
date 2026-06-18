@@ -7,6 +7,7 @@ import {
   getInitialApplications,
   addApplication,
   withdrawApplication,
+  resubmitApplication,
   type LeaveApplication,
   type LeaveType,
   type LeaveStatus
@@ -16,7 +17,7 @@ import {
   removeCurrentUser,
   LEAVE_RECORDS_KEY
 } from '../utils/leaveStorage'
-import { canWithdraw, statusTagType, statusLabel } from '../utils/leaveVisibility'
+import { canWithdraw, canResubmit, statusTagType, statusLabel } from '../utils/leaveVisibility'
 import { mockUsers } from '../mock/accounts'
 
 const router = useRouter()
@@ -165,6 +166,29 @@ const handleWithdraw = async (row: LeaveApplication) => {
       loadMyApplications()
     } else {
       ElMessage.error('撤回失败，该申请状态可能已变更')
+    }
+  } catch {
+    // cancelled
+  }
+}
+
+const handleResubmit = async (row: LeaveApplication) => {
+  try {
+    await ElMessageBox.confirm(
+      '将基于原申请内容生成一条新的待审批记录，原记录保持已驳回状态。是否继续？',
+      '再次提交确认',
+      {
+        confirmButtonText: '确认提交',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    const newApp = resubmitApplication(row.id)
+    if (newApp) {
+      ElMessage.success('已再次提交申请，等待教师审批')
+      loadMyApplications()
+    } else {
+      ElMessage.error('再次提交失败，该申请状态可能已变更')
     }
   } catch {
     // cancelled
@@ -326,7 +350,7 @@ const handleLogout = () => {
                 <span v-else style="color: #c0c4cc">-</span>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="150" fixed="right" align="center">
+            <el-table-column label="操作" width="200" fixed="right" align="center">
               <template #default="{ row }">
                 <el-button link type="primary" :icon="View" @click="handleViewDetail(row)">
                   详情
@@ -338,6 +362,14 @@ const handleLogout = () => {
                   @click="handleWithdraw(row)"
                 >
                   撤回
+                </el-button>
+                <el-button
+                  v-if="canResubmit(row.status)"
+                  link
+                  type="primary"
+                  @click="handleResubmit(row)"
+                >
+                  再次提交
                 </el-button>
               </template>
             </el-table-column>
@@ -378,6 +410,13 @@ const handleLogout = () => {
       </template>
       <template #footer>
         <el-button @click="detailVisible = false">关闭</el-button>
+        <el-button
+          v-if="currentApplication && canResubmit(currentApplication.status)"
+          type="primary"
+          @click="detailVisible = false; handleResubmit(currentApplication!)"
+        >
+          再次提交
+        </el-button>
       </template>
     </el-dialog>
   </div>

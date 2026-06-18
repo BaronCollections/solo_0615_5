@@ -4,6 +4,10 @@ export function canWithdraw(status: LeaveStatus): boolean {
   return status === 'pending'
 }
 
+export function canResubmit(status: LeaveStatus): boolean {
+  return status === 'rejected'
+}
+
 export function isPendingForTeacher(status: LeaveStatus): boolean {
   return status === 'pending'
 }
