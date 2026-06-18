@@ -100,10 +100,11 @@ const handleStorageChange = (e: StorageEvent) => {
 }
 
 const statusTagType = (status: LeaveStatus) => {
-  const map: Record<LeaveStatus, '' | 'success' | 'danger' | 'warning'> = {
+  const map: Record<LeaveStatus, '' | 'success' | 'danger' | 'warning' | 'info'> = {
     pending: 'warning',
     approved: 'success',
-    rejected: 'danger'
+    rejected: 'danger',
+    withdrawn: 'info'
   }
   return map[status]
 }
@@ -112,7 +113,8 @@ const statusLabel = (status: LeaveStatus) => {
   const map: Record<LeaveStatus, string> = {
     pending: '待审批',
     approved: '已通过',
-    rejected: '已驳回'
+    rejected: '已驳回',
+    withdrawn: '已撤回'
   }
   return map[status]
 }

@@ -1,4 +1,4 @@
-export type LeaveStatus = 'pending' | 'approved' | 'rejected'
+export type LeaveStatus = 'pending' | 'approved' | 'rejected' | 'withdrawn'
 export type LeaveType = '事假' | '病假' | '公假' | '丧假'
 
 export interface LeaveApplication {

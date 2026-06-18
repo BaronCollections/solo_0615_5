@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { SwitchButton, View } from '@element-plus/icons-vue'
 import {
   getInitialApplications,
   addApplication,
+  withdrawApplication,
   type LeaveApplication,
   type LeaveType,
   type LeaveStatus
@@ -52,10 +53,11 @@ const leaveRules: FormRules = {
 }
 
 const statusTagType = (status: LeaveStatus) => {
-  const map: Record<LeaveStatus, '' | 'success' | 'danger' | 'warning'> = {
+  const map: Record<LeaveStatus, '' | 'success' | 'danger' | 'warning' | 'info'> = {
     pending: 'warning',
     approved: 'success',
-    rejected: 'danger'
+    rejected: 'danger',
+    withdrawn: 'info'
   }
   return map[status]
 }
@@ -64,7 +66,8 @@ const statusLabel = (status: LeaveStatus) => {
   const map: Record<LeaveStatus, string> = {
     pending: '待审批',
     approved: '已通过',
-    rejected: '已驳回'
+    rejected: '已驳回',
+    withdrawn: '已撤回'
   }
   return map[status]
 }
@@ -145,6 +148,25 @@ const handleReset = () => {
 const handleViewDetail = (row: LeaveApplication) => {
   currentApplication.value = row
   detailVisible.value = true
+}
+
+const handleWithdraw = async (row: LeaveApplication) => {
+  try {
+    await ElMessageBox.confirm('确认撤回该请假申请？撤回后将无法恢复。', '撤回确认', {
+      confirmButtonText: '确认撤回',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    const success = withdrawApplication(row.id)
+    if (success) {
+      ElMessage.success('申请已撤回')
+      loadMyApplications()
+    } else {
+      ElMessage.error('撤回失败，该申请状态可能已变更')
+    }
+  } catch {
+    // cancelled
+  }
 }
 
 const handleLogout = () => {
@@ -274,10 +296,18 @@ const handleLogout = () => {
                 <span v-else style="color: #c0c4cc">-</span>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="80" fixed="right" align="center">
+            <el-table-column label="操作" width="150" fixed="right" align="center">
               <template #default="{ row }">
                 <el-button link type="primary" :icon="View" @click="handleViewDetail(row)">
                   详情
+                </el-button>
+                <el-button
+                  v-if="row.status === 'pending'"
+                  link
+                  type="danger"
+                  @click="handleWithdraw(row)"
+                >
+                  撤回
                 </el-button>
               </template>
             </el-table-column>

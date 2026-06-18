@@ -159,3 +159,14 @@ export function addApplication(app: Omit<LeaveApplication, 'id' | 'status' | 're
   saveApplications(applications)
   return newApp
 }
+
+export function withdrawApplication(id: string): boolean {
+  const applications = getInitialApplications()
+  const target = applications.find((a) => a.id === id)
+  if (!target || target.status !== 'pending') {
+    return false
+  }
+  target.status = 'withdrawn'
+  saveApplications(applications)
+  return true
+}
