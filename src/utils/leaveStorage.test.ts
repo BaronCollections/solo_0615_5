@@ -68,7 +68,7 @@ describe('leaveStorage - 非法 JSON 容错处理', () => {
       { value: '{"data": []}', desc: 'wrapped object' }
     ]
 
-    for (const { value, desc } of nonArrayCases) {
+    for (const { value, desc: _desc } of nonArrayCases) {
       localStorage.clear()
       localStorage.setItem(LEAVE_RECORDS_KEY, value)
       expect(hasLeaveRecordsKey()).toBe(true)

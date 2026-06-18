@@ -28,11 +28,28 @@ const currentUser = computed(() => {
 })
 
 const myApplications = ref<LeaveApplication[]>([])
+const activeTab = ref<LeaveStatus | 'all'>('all')
 const detailVisible = ref(false)
 const currentApplication = ref<LeaveApplication | null>(null)
 
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
+
+const tabCounts = computed(() => {
+  const all = myApplications.value.length
+  const pending = myApplications.value.filter((a) => a.status === 'pending').length
+  const approved = myApplications.value.filter((a) => a.status === 'approved').length
+  const rejected = myApplications.value.filter((a) => a.status === 'rejected').length
+  const withdrawn = myApplications.value.filter((a) => a.status === 'withdrawn').length
+  return { all, pending, approved, rejected, withdrawn }
+})
+
+const filteredApplications = computed(() => {
+  if (activeTab.value === 'all') {
+    return myApplications.value
+  }
+  return myApplications.value.filter((a) => a.status === activeTab.value)
+})
 
 const leaveForm = ref({
   leaveType: '' as LeaveType | '',
@@ -141,6 +158,10 @@ const handleWithdraw = async (row: LeaveApplication) => {
     const success = withdrawApplication(row.id)
     if (success) {
       ElMessage.success('申请已撤回')
+      const target = myApplications.value.find((a) => a.id === row.id)
+      if (target) {
+        target.status = 'withdrawn'
+      }
       loadMyApplications()
     } else {
       ElMessage.error('撤回失败，该申请状态可能已变更')
@@ -245,7 +266,35 @@ const handleLogout = () => {
           <template #header>
             <span class="card-title">我的请假记录</span>
           </template>
-          <el-table :data="myApplications" stripe border style="width: 100%">
+          <el-tabs v-model="activeTab">
+            <el-tab-pane label="全部" name="all">
+              <template #label>
+                全部 <el-badge :value="tabCounts.all" class="tab-badge" type="info" />
+              </template>
+            </el-tab-pane>
+            <el-tab-pane label="待审批" name="pending">
+              <template #label>
+                待审批 <el-badge :value="tabCounts.pending" class="tab-badge" type="warning" />
+              </template>
+            </el-tab-pane>
+            <el-tab-pane label="已通过" name="approved">
+              <template #label>
+                已通过 <el-badge :value="tabCounts.approved" class="tab-badge" type="success" />
+              </template>
+            </el-tab-pane>
+            <el-tab-pane label="已驳回" name="rejected">
+              <template #label>
+                已驳回 <el-badge :value="tabCounts.rejected" class="tab-badge" type="danger" />
+              </template>
+            </el-tab-pane>
+            <el-tab-pane label="已撤回" name="withdrawn">
+              <template #label>
+                已撤回 <el-badge :value="tabCounts.withdrawn" class="tab-badge" type="info" />
+              </template>
+            </el-tab-pane>
+          </el-tabs>
+
+          <el-table :data="filteredApplications" stripe border style="width: 100%">
             <el-table-column prop="id" label="申请编号" width="100" />
             <el-table-column prop="courseName" label="课程" width="90" />
             <el-table-column prop="leaveType" label="请假类型" width="90" />
@@ -293,7 +342,7 @@ const handleLogout = () => {
               </template>
             </el-table-column>
           </el-table>
-          <el-empty v-if="myApplications.length === 0" description="暂无请假记录" />
+          <el-empty v-if="filteredApplications.length === 0" description="暂无请假记录" />
         </el-card>
       </el-main>
     </el-container>
@@ -383,6 +432,14 @@ const handleLogout = () => {
 
 .records-card :deep(.el-card__body) {
   padding-top: 0;
+}
+
+.tab-badge {
+  margin-left: 4px;
+}
+
+.tab-badge :deep(.el-badge__content) {
+  font-size: 11px;
 }
 
 .el-table {
