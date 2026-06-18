@@ -6,6 +6,7 @@ import {
   type LeaveStatus,
   type LeaveType
 } from '../utils/leaveStorage'
+import { canWithdraw } from '../utils/leaveVisibility'
 
 export { LEAVE_RECORDS_KEY as STORAGE_KEY }
 export type { LeaveApplication, LeaveStatus, LeaveType }
@@ -163,7 +164,7 @@ export function addApplication(app: Omit<LeaveApplication, 'id' | 'status' | 're
 export function withdrawApplication(id: string): boolean {
   const applications = getInitialApplications()
   const target = applications.find((a) => a.id === id)
-  if (!target || target.status !== 'pending') {
+  if (!target || !canWithdraw(target.status)) {
     return false
   }
   target.status = 'withdrawn'

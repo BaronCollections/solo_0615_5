@@ -14,6 +14,7 @@ import {
   removeCurrentUser,
   LEAVE_RECORDS_KEY
 } from '../utils/leaveStorage'
+import { isPendingForTeacher, statusTagType, statusLabel } from '../utils/leaveVisibility'
 import { mockUsers } from '../mock/accounts'
 
 const router = useRouter()
@@ -48,7 +49,7 @@ const currentUser = computed(() => {
 
 const tabCounts = computed(() => {
   const all = applications.value.length
-  const pending = applications.value.filter((a) => a.status === 'pending').length
+  const pending = applications.value.filter((a) => isPendingForTeacher(a.status)).length
   const approved = applications.value.filter((a) => a.status === 'approved').length
   const rejected = applications.value.filter((a) => a.status === 'rejected').length
   return { all, pending, approved, rejected }
@@ -58,7 +59,11 @@ const filteredApplications = computed(() => {
   let result = applications.value
 
   if (activeTab.value !== 'all') {
-    result = result.filter((a) => a.status === activeTab.value)
+    if (activeTab.value === 'pending') {
+      result = result.filter((a) => isPendingForTeacher(a.status))
+    } else {
+      result = result.filter((a) => a.status === activeTab.value)
+    }
   }
 
   if (filterForm.value.className) {
@@ -97,26 +102,6 @@ const handleStorageChange = (e: StorageEvent) => {
   if (e.key === LEAVE_RECORDS_KEY) {
     applications.value = getInitialApplications()
   }
-}
-
-const statusTagType = (status: LeaveStatus) => {
-  const map: Record<LeaveStatus, '' | 'success' | 'danger' | 'warning' | 'info'> = {
-    pending: 'warning',
-    approved: 'success',
-    rejected: 'danger',
-    withdrawn: 'info'
-  }
-  return map[status]
-}
-
-const statusLabel = (status: LeaveStatus) => {
-  const map: Record<LeaveStatus, string> = {
-    pending: '待审批',
-    approved: '已通过',
-    rejected: '已驳回',
-    withdrawn: '已撤回'
-  }
-  return map[status]
 }
 
 const handleSearch = () => {
@@ -311,7 +296,7 @@ const handleLogout = () => {
                 <el-button link type="primary" :icon="View" @click="handleView(row)">
                   详情
                 </el-button>
-                <template v-if="row.status === 'pending'">
+                <template v-if="isPendingForTeacher(row.status)">
                   <el-button link type="success" :icon="Check" @click="handleApprove(row)">
                     通过
                   </el-button>
@@ -356,7 +341,7 @@ const handleLogout = () => {
         </el-descriptions>
       </template>
       <template #footer>
-        <template v-if="currentApplication?.status === 'pending'">
+        <template v-if="currentApplication && isPendingForTeacher(currentApplication.status)">
           <el-button @click="detailVisible = false">取消</el-button>
           <el-button type="danger" @click="detailVisible = false; openRejectDialog(currentApplication!)">
             驳回

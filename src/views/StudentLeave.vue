@@ -16,6 +16,7 @@ import {
   removeCurrentUser,
   LEAVE_RECORDS_KEY
 } from '../utils/leaveStorage'
+import { canWithdraw, statusTagType, statusLabel } from '../utils/leaveVisibility'
 import { mockUsers } from '../mock/accounts'
 
 const router = useRouter()
@@ -50,26 +51,6 @@ const leaveRules: FormRules = {
   startDate: [{ required: true, message: '请选择开始日期', trigger: 'change' }],
   endDate: [{ required: true, message: '请选择结束日期', trigger: 'change' }],
   reason: [{ required: true, message: '请填写请假原因', trigger: 'blur' }]
-}
-
-const statusTagType = (status: LeaveStatus) => {
-  const map: Record<LeaveStatus, '' | 'success' | 'danger' | 'warning' | 'info'> = {
-    pending: 'warning',
-    approved: 'success',
-    rejected: 'danger',
-    withdrawn: 'info'
-  }
-  return map[status]
-}
-
-const statusLabel = (status: LeaveStatus) => {
-  const map: Record<LeaveStatus, string> = {
-    pending: '待审批',
-    approved: '已通过',
-    rejected: '已驳回',
-    withdrawn: '已撤回'
-  }
-  return map[status]
 }
 
 const loadMyApplications = () => {
@@ -302,7 +283,7 @@ const handleLogout = () => {
                   详情
                 </el-button>
                 <el-button
-                  v-if="row.status === 'pending'"
+                  v-if="canWithdraw(row.status)"
                   link
                   type="danger"
                   @click="handleWithdraw(row)"
