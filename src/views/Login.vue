@@ -4,12 +4,12 @@ import { useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
 import { validateLogin } from '../utils/auth'
+import { setCurrentUsername } from '../utils/leaveStorage'
 import { mockUsers } from '../mock/accounts'
 
 const router = useRouter()
 
 const REMEMBERED_USERNAME_KEY = 'smart_campus_remembered_username'
-const CURRENT_USER_KEY = 'smart_campus_current_user'
 
 const loginFormRef = ref<FormInstance>()
 const loading = ref(false)
@@ -54,7 +54,7 @@ const handleLogin = async () => {
         } else {
           localStorage.removeItem(REMEMBERED_USERNAME_KEY)
         }
-        localStorage.setItem(CURRENT_USER_KEY, result.user.username)
+        setCurrentUsername(result.user.username)
         ElMessage.success(result.message)
 
         if (result.user.role === 'teacher') {

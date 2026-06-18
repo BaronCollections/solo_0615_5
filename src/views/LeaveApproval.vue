@@ -6,10 +6,14 @@ import { Search, Refresh, View, Check, Close, SwitchButton } from '@element-plus
 import {
   getInitialApplications,
   saveApplications,
-  STORAGE_KEY,
   type LeaveApplication,
   type LeaveStatus
 } from '../mock/leaves'
+import {
+  getCurrentUsername,
+  removeCurrentUser,
+  LEAVE_RECORDS_KEY
+} from '../utils/leaveStorage'
 import { mockUsers } from '../mock/accounts'
 
 const router = useRouter()
@@ -37,7 +41,7 @@ const rejectRules: FormRules = {
 }
 
 const currentUser = computed(() => {
-  const username = localStorage.getItem('smart_campus_current_user')
+  const username = getCurrentUsername()
   if (!username) return null
   return mockUsers.find((u) => u.username === username) || null
 })
@@ -90,7 +94,7 @@ onUnmounted(() => {
 })
 
 const handleStorageChange = (e: StorageEvent) => {
-  if (e.key === STORAGE_KEY) {
+  if (e.key === LEAVE_RECORDS_KEY) {
     applications.value = getInitialApplications()
   }
 }
@@ -176,7 +180,7 @@ const handleRejectConfirm = async () => {
 }
 
 const handleLogout = () => {
-  localStorage.removeItem('smart_campus_current_user')
+  removeCurrentUser()
   router.replace('/login')
 }
 </script>

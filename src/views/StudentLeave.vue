@@ -6,17 +6,21 @@ import { SwitchButton, View } from '@element-plus/icons-vue'
 import {
   getInitialApplications,
   addApplication,
-  STORAGE_KEY,
   type LeaveApplication,
   type LeaveType,
   type LeaveStatus
 } from '../mock/leaves'
+import {
+  getCurrentUsername,
+  removeCurrentUser,
+  LEAVE_RECORDS_KEY
+} from '../utils/leaveStorage'
 import { mockUsers } from '../mock/accounts'
 
 const router = useRouter()
 
 const currentUser = computed(() => {
-  const username = localStorage.getItem('smart_campus_current_user')
+  const username = getCurrentUsername()
   if (!username) return null
   return mockUsers.find((u) => u.username === username) || null
 })
@@ -74,7 +78,7 @@ const loadMyApplications = () => {
 }
 
 const handleStorageChange = (e: StorageEvent) => {
-  if (e.key === STORAGE_KEY) {
+  if (e.key === LEAVE_RECORDS_KEY) {
     loadMyApplications()
   }
 }
@@ -144,7 +148,7 @@ const handleViewDetail = (row: LeaveApplication) => {
 }
 
 const handleLogout = () => {
-  localStorage.removeItem('smart_campus_current_user')
+  removeCurrentUser()
   router.replace('/login')
 }
 </script>

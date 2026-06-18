@@ -1,22 +1,14 @@
-export type LeaveStatus = 'pending' | 'approved' | 'rejected'
-export type LeaveType = '事假' | '病假' | '公假' | '丧假'
+import {
+  getLeaveRecords,
+  saveLeaveRecords,
+  LEAVE_RECORDS_KEY,
+  type LeaveApplication,
+  type LeaveStatus,
+  type LeaveType
+} from '../utils/leaveStorage'
 
-export interface LeaveApplication {
-  id: string
-  studentName: string
-  className: string
-  courseName: string
-  leaveType: LeaveType
-  startDate: string
-  endDate: string
-  reason: string
-  status: LeaveStatus
-  rejectReason: string
-  submittedAt: string
-  approvedAt: string
-}
-
-export const STORAGE_KEY = 'smart_campus_leave_records'
+export { LEAVE_RECORDS_KEY as STORAGE_KEY }
+export type { LeaveApplication, LeaveStatus, LeaveType }
 
 const RAW_APPLICATIONS: Omit<LeaveApplication, 'status' | 'rejectReason' | 'approvedAt'>[] = [
   {
@@ -132,13 +124,9 @@ const RAW_APPLICATIONS: Omit<LeaveApplication, 'status' | 'rejectReason' | 'appr
 ]
 
 export function getInitialApplications(): LeaveApplication[] {
-  const stored = localStorage.getItem(STORAGE_KEY)
+  const stored = getLeaveRecords()
   if (stored) {
-    try {
-      return JSON.parse(stored) as LeaveApplication[]
-    } catch {
-      // ignore
-    }
+    return stored
   }
   const applications: LeaveApplication[] = RAW_APPLICATIONS.map((item) => ({
     ...item,
@@ -146,12 +134,12 @@ export function getInitialApplications(): LeaveApplication[] {
     rejectReason: '',
     approvedAt: ''
   }))
-  saveApplications(applications)
+  saveLeaveRecords(applications)
   return applications
 }
 
 export function saveApplications(applications: LeaveApplication[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(applications))
+  saveLeaveRecords(applications)
 }
 
 export function addApplication(app: Omit<LeaveApplication, 'id' | 'status' | 'rejectReason' | 'approvedAt'>): LeaveApplication {

@@ -1,0 +1,48 @@
+export type LeaveStatus = 'pending' | 'approved' | 'rejected'
+export type LeaveType = '事假' | '病假' | '公假' | '丧假'
+
+export interface LeaveApplication {
+  id: string
+  studentName: string
+  className: string
+  courseName: string
+  leaveType: LeaveType
+  startDate: string
+  endDate: string
+  reason: string
+  status: LeaveStatus
+  rejectReason: string
+  submittedAt: string
+  approvedAt: string
+}
+
+export const CURRENT_USER_KEY = 'smart_campus_current_user'
+export const LEAVE_RECORDS_KEY = 'smart_campus_leave_records'
+
+export function getCurrentUsername(): string | null {
+  return localStorage.getItem(CURRENT_USER_KEY)
+}
+
+export function setCurrentUsername(username: string): void {
+  localStorage.setItem(CURRENT_USER_KEY, username)
+}
+
+export function removeCurrentUser(): void {
+  localStorage.removeItem(CURRENT_USER_KEY)
+}
+
+export function getLeaveRecords(): LeaveApplication[] | null {
+  const stored = localStorage.getItem(LEAVE_RECORDS_KEY)
+  if (stored) {
+    try {
+      return JSON.parse(stored) as LeaveApplication[]
+    } catch {
+      return null
+    }
+  }
+  return null
+}
+
+export function saveLeaveRecords(applications: LeaveApplication[]): void {
+  localStorage.setItem(LEAVE_RECORDS_KEY, JSON.stringify(applications))
+}
