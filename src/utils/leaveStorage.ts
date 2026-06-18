@@ -31,16 +31,30 @@ export function removeCurrentUser(): void {
   localStorage.removeItem(CURRENT_USER_KEY)
 }
 
+export function hasLeaveRecordsKey(): boolean {
+  return localStorage.getItem(LEAVE_RECORDS_KEY) !== null
+}
+
+function isLeaveApplicationArray(value: unknown): value is LeaveApplication[] {
+  return Array.isArray(value)
+}
+
 export function getLeaveRecords(): LeaveApplication[] | null {
   const stored = localStorage.getItem(LEAVE_RECORDS_KEY)
-  if (stored) {
-    try {
-      return JSON.parse(stored) as LeaveApplication[]
-    } catch {
-      return null
-    }
+  if (stored === null) {
+    return null
   }
-  return null
+  try {
+    const parsed = JSON.parse(stored)
+    if (isLeaveApplicationArray(parsed)) {
+      return parsed
+    }
+    saveLeaveRecords([])
+    return []
+  } catch {
+    saveLeaveRecords([])
+    return []
+  }
 }
 
 export function saveLeaveRecords(applications: LeaveApplication[]): void {

@@ -125,7 +125,7 @@ const RAW_APPLICATIONS: Omit<LeaveApplication, 'status' | 'rejectReason' | 'appr
 
 export function getInitialApplications(): LeaveApplication[] {
   const stored = getLeaveRecords()
-  if (stored) {
+  if (stored !== null) {
     return stored
   }
   const applications: LeaveApplication[] = RAW_APPLICATIONS.map((item) => ({
